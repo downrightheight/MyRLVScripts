@@ -1,18 +1,30 @@
 float time;
 integer tInt; 
-float stime = 0.85;
-float etime = 1;
+float stime = 16.33;
+float etime = 16.5;
 integer eth;
 integer sth;
 float timeleft;
 integer curfew = 0;
 vector home;
-integer Prelock =0;
+integer Prelock = 0;
+key homeparcel;
+string RLVStringOn = "@tploc=n,tplm=n,tplure_sec=n,detach=force,attachallover:.Hidden/Home Slave=force,detachthis:.Hidden/Home Slave=n,edit=n,rez=n,showinv=n";
+string RLVStringOff = "@tploc=y,tplm=y,tplure_sec=y,edit=y,rez=y,detachthis:.Hidden/Home Slave=y,showinv=y";
+
+restate() {
+    if(Prelock == 1 || curfew = 1) {
+        llOwnerSay("@detach=n");
+    }
+    if(curfew = 1 && llList2Key(llGetParcelDetails(llGetPos(),[PARCEL_DETAILS_ID]),0) == homeparcel ) {
+        llOwnerSay(RLVStringOn);
+    }
+}
 
 release() {
     curfew = 0;
     llOwnerSay("Curfew Ended");
-        llOwnerSay("@tploc=y,tplm=y,tplure_sec=y,edit=y,rez=y,detachthis:.Hidden/Home Slave=y,showinv=y");
+        llOwnerSay(RLVStringOff);
         llOwnerSay("@detach=y");
 }
 
@@ -26,7 +38,7 @@ enforce () {
     llSay(0,llGetDisplayName(llGetOwner()) + " is out after curfew, curfew will now be enforced");
     llOwnerSay("@detach=n");
     llSleep(5);
-    llOwnerSay("@tploc=n,tplm=n,tplure_sec=n,detach=force,attachallover:.Hidden/Home Slave=force,detachthis:.Hidden/Home Slave=n,edit=n,rez=n,showinv=n");
+    llOwnerSay(RLVStringOn);
     llSleep(60);
     llSay(0, "Transporting "+ llGetDisplayName(llGetOwner()) + " to the confinement zone");
     llSleep(5);
@@ -62,7 +74,11 @@ computetime(float currtime)
      
   //  llOwnerSay("Timeleft" + (string)timeleft);
     
-  if(eth > sth && currtime<eth && currtime >sth ) {
+  if (llList2Key(llGetParcelDetails(llGetPos(),[PARCEL_DETAILS_ID]),0) != homeparcel && curfew == 1) {
+        llSay(0,llGetDisplayName(llGetOwner()) + " has breached curfew, enforcing curfew");
+        enforce();
+  }
+  else if(eth > sth && currtime<eth && currtime >sth ) {
        enforce();
        }    
    else if(eth < sth && (currtime<eth || currtime>sth) ) {
@@ -95,6 +111,7 @@ default
         eth = (integer) (etime * 3600);
         sth = (integer) (stime * 3600);
         home = llGetRegionCorner() + llGetPos();
+        homeparcel = llList2Key(llGetParcelDetails(llGetPos(),[PARCEL_DETAILS_ID]),0);
 
     }
 
@@ -106,12 +123,16 @@ default
     
     timer() {
        computetime(llGetGMTclock());
+           
        
            }
-    
-   
-    
-    
-    
+    on_rez(integer i) {
+        if (curfew == 1) {
+            restate();
+            }
+        }
+       
+        
+
     
 }

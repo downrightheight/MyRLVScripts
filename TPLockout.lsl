@@ -1,6 +1,16 @@
-integer time_lockout = 300;
+integer baseclock = 60;
+integer locktime = 0;
 integer lockedout = 0;
 integer hardcore = 1;
+float mult = 1;
+
+integer CalcLockTime() {
+
+   return (integer) (300 + (baseclock * mult * llFrand(1.0)));
+
+
+}
+
 
 
 normallock() {
@@ -14,10 +24,18 @@ lockdown() {
     llOwnerSay("Entered new region, 5 min tp lockout engaged");
     lockedout = 1;
         llOwnerSay("@tploc=n,tplm=n,detach=n");
-         llSetTimerEvent(time_lockout);
+         locktime = CalcLockTime();
+         llOwnerSay("Lock Time set at " + (string) locktime + " seconds");
     }
     
-    
+unlock() {
+     
+         lockedout = 0;
+            llOwnerSay("@tploc=y,tplm=y,detach=y");
+            llOwnerSay("TPLockout disengaged");
+         
+
+}
     
 
 
@@ -67,11 +85,20 @@ default
     
     timer()
     {
-        if (lockedout == 1) {
-         lockedout = 0;
-            llOwnerSay("@tploc=y,tplm=y,detach=y");
-            llOwnerSay("TPLockout disengaged");
+        if(lockedout == 1 ) 
+        {
+        mult +=1;
+        locktime -= baseclock;
+        } else if (mult > 1) 
+        {
+        mult -= 1;
         }
+        
+        if(locktime < 0) {
+            unlock();
+        }
+      
+       
         
         
     }
